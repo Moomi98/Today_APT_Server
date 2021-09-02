@@ -32,7 +32,7 @@ public class ApiControllerTest {
         URI uri = new URI(stringUri); // URI 클래스 사용 시 한 번 encoding 작업 후 get 요청
 
         RestTemplate restTemplate = new RestTemplate();
-        String result = restTemplate.getForObject(uri, String.class);
+        String result = restTemplate.getForObject(uri, String.class); // 공공데이터 요청 후 JSON 형태로 받음
         System.out.println(uri);
         System.out.println(result);
     }

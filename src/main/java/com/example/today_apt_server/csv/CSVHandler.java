@@ -41,7 +41,6 @@ public class CSVHandler {
         setRanking(aptList);
         convertListToMap(aptList);
         System.out.println("----------- 분석 완료! ---------------");
-
         return aptList;
     }
 
