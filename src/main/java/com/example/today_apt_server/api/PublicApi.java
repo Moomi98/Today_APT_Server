@@ -1,22 +1,22 @@
-package com.example.today_apt_server.controller;
+package com.example.today_apt_server.api;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.web.bind.annotation.GetMapping;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.yaml.snakeyaml.util.UriEncoder;
 
-import java.io.*;
-import java.net.*;
-import java.nio.charset.Charset;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
-@SpringBootTest
-public class ApiControllerTest {
+@Component
+public class PublicApi {
 
-    @Test
-    public void getOpenApiTest(String LAWD_CD) throws URISyntaxException {
+    public String getOpenApi(String LAWD_CD) throws URISyntaxException {
         String encodedServiceKey = "AAU8XVY6qAEr%2BjeoQWSx5%2BDtoZilWGKXT8jlz00LhC%2BnD51sqLyQcMnaT06waub%2Fuy1OoEhGkIB4MXUpZ3qi9A%3D%3D";
         String pageNo = "1";
         String numOfRows = "10";
@@ -33,12 +33,13 @@ public class ApiControllerTest {
 
         RestTemplate restTemplate = new RestTemplate();
         String result = restTemplate.getForObject(uri, String.class);
-        System.out.println(uri);
-        System.out.println(result);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+
+        return result;
     }
 
-    @Test
-    public void getAreaCodeTest() throws IOException, URISyntaxException { // 법정동코드 파일의 존재하는 모든 구,군 단위의 법정동 코드 전처리
+    public String getAreaCode() throws IOException, URISyntaxException { // 법정동코드 파일의 존재하는 모든 구,군 단위의 법정동 코드 전처리
         File file = new File("./data/법정동코드 전체자료.txt");
         if(file.exists()){
             BufferedReader bufferedReader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8));
@@ -46,13 +47,14 @@ public class ApiControllerTest {
             while((str = bufferedReader.readLine()) != null){
                 var text = str.split("\\s");
                 if(text[text.length - 1].equals("존재") && text.length == 4){
-                    getOpenApiTest(text[0].substring(0, 5));
+                    return text[0].substring(0, 5);
                 }
-                   // System.out.println(text[0].substring(0, 5) + " " + text[1] + " " + text[2] + " " + text[3]);
+                // System.out.println(text[0].substring(0, 5) + " " + text[1] + " " + text[2] + " " + text[3]);
             }
         }
         else
             System.out.println("파일이 없습니다.");
 
+        return "";
     }
 }
