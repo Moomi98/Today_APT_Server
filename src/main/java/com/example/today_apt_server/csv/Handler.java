@@ -1,19 +1,14 @@
 package com.example.today_apt_server.csv;
 
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class Handler {
 
     private final CSVHandler csvHandler;
-
-
-    public Handler(CSVHandler csvHandler) {
-        this.csvHandler = csvHandler;
-    }
-
-    public CSVHandler getCsvHandler(){
-        return csvHandler;
-    }
+    private final PublicApiHandler publicApiHandler;
 
 }

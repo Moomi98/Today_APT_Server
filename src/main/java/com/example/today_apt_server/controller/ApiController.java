@@ -19,7 +19,7 @@ public class ApiController {
     @GetMapping("/get/aptInfo")
     public ArrayList<String> sendTodayAptInfo() throws IOException {
         handler = new Handler(new CSVHandler());
-        csvHandler = handler.getCsvHandler();
+        csvHandler =
         ArrayList<APT> aptList = csvHandler.openCSV("C:\\Today_APT_Server\\data\\data_20210731.csv");
 
         return Converter.convertToJson(aptList);
