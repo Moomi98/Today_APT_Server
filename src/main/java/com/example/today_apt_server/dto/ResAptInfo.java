@@ -1,5 +1,6 @@
 package com.example.today_apt_server.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,17 +8,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class APTInfo implements Comparable<APT>{
+public class ResAptInfo {
 
     int rank; // 순위
-    private Long longPrice; // 거래금액
     private String price; // 실제 전송할 거래 금액
     private String aptName; // 아파트명
-
-    @Override
-    public int compareTo(APT o) {
-        return Long.compare(o.getLongPrice(), this.longPrice);
-    }
 
     @Data
     @AllArgsConstructor

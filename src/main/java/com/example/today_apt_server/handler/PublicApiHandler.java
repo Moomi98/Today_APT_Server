@@ -1,7 +1,11 @@
-package com.example.today_apt_server.csv;
+package com.example.today_apt_server.handler;
 
+import com.example.today_apt_server.dto.ReqAPTInfo;
+import com.example.today_apt_server.dto.ResAptInfo;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -18,8 +22,8 @@ import java.util.ArrayList;
 @Component
 public class PublicApiHandler {
 
-
-    public String getOpenApi(ArrayList<String> codeList) throws URISyntaxException {
+    public String getOpenApi(ArrayList<String> codeList) throws URISyntaxException, JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
         String encodedServiceKey = "AAU8XVY6qAEr%2BjeoQWSx5%2BDtoZilWGKXT8jlz00LhC%2BnD51sqLyQcMnaT06waub%2Fuy1OoEhGkIB4MXUpZ3qi9A%3D%3D";
         String pageNo = "1";
         String numOfRows = "10";
@@ -38,9 +42,28 @@ public class PublicApiHandler {
             URI uri = new URI(stringUri); // URI 클래스 사용 시 한 번 encoding 작업 후 get 요청
 
             String result = restTemplate.getForObject(uri, String.class);
+            String jsonObject = jsonProcessing(result);
+            if(jsonObject != null){
+                ReqAPTInfo reqAPTInfo = objectMapper.readValue(jsonObject, ReqAPTInfo.class);
+
+            }
         }
 
-        return result;
+        return "";
+    }
+
+    private String jsonProcessing(String json) throws JSONException { // 다중 json에서 item들만 골라내는 함수
+        JSONObject jsonObject = new JSONObject(json);
+        JSONObject jsonObject1 = jsonObject.optJSONObject("response");
+        JSONObject jsonObject2 = jsonObject1.optJSONObject("body");
+        int totalCount = jsonObject2.getInt("totalCount"); // 해당 구의 거래 내역이 있었는지 확인
+        if(totalCount != 0){
+            JSONObject jsonObject3 = jsonObject2.getJSONObject("items");
+            System.out.println(jsonObject3.toString());
+            return jsonObject3.toString();
+        }
+
+        return null;
     }
 
     public ArrayList<String> getAreaCode() throws IOException { // 법정동코드 파일의 존재하는 모든 구,군 단위의 법정동 코드 전처리
