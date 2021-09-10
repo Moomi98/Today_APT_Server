@@ -7,6 +7,7 @@ import com.example.today_apt_server.dto.ReqAPTInfo;
 import com.example.today_apt_server.dto.ResAptInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,15 +28,17 @@ import java.util.HashMap;
 import java.util.List;
 
 @Component
+@Data
 public class PublicApiHandler {
 
     private ArrayList<ReqAPTInfo> reqAPTInfoArrayList;
+    private ArrayList<ResAptInfo> resAptInfoArrayList;
+    private ArrayList<String> aptInfoJson;
     private HashMap<String, String> codeMap;
 
     public ArrayList<String> getOpenApi(String DEAL_YMD) throws URISyntaxException, IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         reqAPTInfoArrayList = new ArrayList<>();
-        ArrayList<ResAptInfo> resAPTInfoArrayList;
         String encodedServiceKey = "AAU8XVY6qAEr%2BjeoQWSx5%2BDtoZilWGKXT8jlz00LhC%2BnD51sqLyQcMnaT06waub%2Fuy1OoEhGkIB4MXUpZ3qi9A%3D%3D";
         String pageNo = "1";
         String numOfRows = "10";
@@ -68,9 +71,9 @@ public class PublicApiHandler {
         }
 
         sortByRank();
-        resAPTInfoArrayList = reqInfoToResInfo();
-
-        return Converter.convertToJson(resAPTInfoArrayList.subList(0, 10));
+        resAptInfoArrayList = reqInfoToResInfo();
+        aptInfoJson = Converter.convertToJson(resAptInfoArrayList.subList(0, 10));
+        return aptInfoJson;
     }
 
     private String jsonProcessing(String json) throws JSONException { // 다중 json에서 item들만 골라내는 함수
