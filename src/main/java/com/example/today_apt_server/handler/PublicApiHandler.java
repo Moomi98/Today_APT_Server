@@ -1,5 +1,6 @@
 package com.example.today_apt_server.handler;
 
+import com.example.today_apt_server.ApplicationContextProvider;
 import com.example.today_apt_server.converter.Converter;
 import com.example.today_apt_server.dto.APT;
 import com.example.today_apt_server.dto.Details;
@@ -11,6 +12,7 @@ import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -35,8 +37,10 @@ public class PublicApiHandler {
     private ArrayList<ResAptInfo> resAptInfoArrayList;
     private ArrayList<String> aptInfoJson;
     private HashMap<String, String> codeMap;
+    private HashMap<String, ArrayList<ResAptInfo>> aptInfoHashMap;
 
-    public ArrayList<String> getOpenApi(String DEAL_YMD) throws URISyntaxException, IOException {
+    public void getOpenApi(String DEAL_YMD) throws URISyntaxException, IOException {
+        System.out.println("데이터 분석 시작...");
         ObjectMapper objectMapper = new ObjectMapper();
         reqAPTInfoArrayList = new ArrayList<>();
         String encodedServiceKey = "AAU8XVY6qAEr%2BjeoQWSx5%2BDtoZilWGKXT8jlz00LhC%2BnD51sqLyQcMnaT06waub%2Fuy1OoEhGkIB4MXUpZ3qi9A%3D%3D";
@@ -72,8 +76,7 @@ public class PublicApiHandler {
 
         sortByRank();
         resAptInfoArrayList = reqInfoToResInfo();
-        aptInfoJson = Converter.convertToJson(resAptInfoArrayList.subList(0, 10));
-        return aptInfoJson;
+        aptInfoJson = Converter.convertToJson(resAptInfoArrayList.subList(0, 50));
     }
 
     private String jsonProcessing(String json) throws JSONException { // 다중 json에서 item들만 골라내는 함수
@@ -91,8 +94,8 @@ public class PublicApiHandler {
     }
 
     private ArrayList<String> getAreaCode() throws IOException { // 법정동코드 파일의 존재하는 모든 구,군 단위의 법정동 코드 전처리
+        System.out.println("법정동 코드 전처리중...");
         ArrayList<String> codeList = new ArrayList<>(); // 법정동 코드를 담을 리스트
-        codeMap = new HashMap<>();
         File file = new File("./data/법정동코드 전체자료.txt");
         if(file.exists()){
             BufferedReader bufferedReader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8));
@@ -108,10 +111,12 @@ public class PublicApiHandler {
         else
             System.out.println("파일이 없습니다.");
 
+        System.out.println("법정동 코드 전처리 완료!");
         return codeList;
     }
 
     private void sortByRank(){ // 가격을 기준으로 순위를 정렬하는 함수
+        System.out.println("순위 정렬 중...");
        for(ReqAPTInfo reqAPTInfo : reqAPTInfoArrayList){
            String price = Converter.deleteComma(reqAPTInfo.getPrice().replaceAll(" ", ""));
 
@@ -119,16 +124,18 @@ public class PublicApiHandler {
             reqAPTInfo.setIntPrice(intPrice);
         }
         Collections.sort(reqAPTInfoArrayList);
+        System.out.println("순위 정렬 완료!");
     }
 
     private ArrayList<ResAptInfo> reqInfoToResInfo(){ // 공공데이터 api 로부터 받은 데이터를 웹 페이지에 전달할 데이터로 변환
+        System.out.println("데이터 변환 중...");
         ArrayList<ResAptInfo> resAptInfoArrayList = new ArrayList<>();
         for(int i = 0; i < reqAPTInfoArrayList.size(); i++){
             ResAptInfo resAptInfo = new ResAptInfo();
             Details details = new Details();
 
             resAptInfo.setAptName(reqAPTInfoArrayList.get(i).getAptName());
-            resAptInfo.setPrice(reqAPTInfoArrayList.get(i).getPrice().replaceAll(" ", ""));
+            resAptInfo.setPrice(Converter.addCommaToPrice(reqAPTInfoArrayList.get(i).getPrice().replaceAll(" ", "")));
             resAptInfo.setRank(i + 1);
             details.setArea(reqAPTInfoArrayList.get(i).getArea());
             details.setAddress(reqAPTInfoArrayList.get(i).getAddress());
@@ -140,7 +147,25 @@ public class PublicApiHandler {
             resAptInfo.setDetails(details);
 
             resAptInfoArrayList.add(resAptInfo);
+
+            ArrayList<ResAptInfo> arrayList = aptInfoHashMap.get(resAptInfoArrayList.get(i).getAptName());
+            if(arrayList == null){
+                arrayList = new ArrayList<>();
+                arrayList.add(resAptInfo);
+                aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), arrayList);
+            }
+            else{
+                arrayList.add(resAptInfo);
+                aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), arrayList);
+            }
         }
+        System.out.println("데이터 변환 완료!");
         return resAptInfoArrayList;
+    }
+
+    private void setSearchHandler(){
+        ApplicationContext context = ApplicationContextProvider.getContext();
+        SearchHandler searchHandler = context.getBean(SearchHandler.class);
+        searchHandler.setAptInfoHashMap(aptInfoHashMap);
     }
 }

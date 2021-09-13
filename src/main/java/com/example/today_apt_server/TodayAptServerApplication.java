@@ -16,8 +16,7 @@ public class TodayAptServerApplication {
         SpringApplication.run(TodayAptServerApplication.class, args);
         ApplicationContext context = ApplicationContextProvider.getContext();
         PublicApiHandler publicApiHandler = context.getBean(PublicApiHandler.class);
-
-        ArrayList<String> aptInfoJson = publicApiHandler.getOpenApi("201912");
+        publicApiHandler.getOpenApi("201912");
         System.out.println("데이터 작업 완료");
     }
 }

@@ -25,8 +25,8 @@ public class Converter {
     }
 
     public static String addCommaToPrice(String price){ // 가격을 보기 편하게 콤마를 붙여주는 함수
-        StringBuilder stringBuilder = new StringBuilder(price);
-        for(int i = price.length() - 3; i > 0; i -= 3){
+        StringBuilder stringBuilder = new StringBuilder(price + "0000");
+        for(int i = stringBuilder.length() - 3; i > 0; i -= 3){
             stringBuilder.insert(i ,',');
         }
 

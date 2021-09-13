@@ -143,4 +143,10 @@ public class PublicApiHadlerTest {
         }
         return resAptInfoArrayList;
     }
+
+    @Test
+    public void converterTest(){
+        String result = Converter.addCommaToPrice("2690000000");
+        System.out.println(result);
+    }
 }
