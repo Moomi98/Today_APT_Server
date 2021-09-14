@@ -37,7 +37,7 @@ public class PublicApiHandler {
     private ArrayList<ResAptInfo> resAptInfoArrayList;
     private ArrayList<String> aptInfoJson;
     private HashMap<String, String> codeMap;
-    private HashMap<String, ArrayList<ResAptInfo>> aptInfoHashMap;
+    private HashMap<String, ArrayList<ResAptInfo>> aptInfoHashMap; // 같은 이름을 가진 아파트가 여러 곳에 있을 수도 있으므로 list 로 관리
 
     public void getOpenApi(String DEAL_YMD) throws URISyntaxException, IOException {
         System.out.println("데이터 분석 시작...");
@@ -96,6 +96,7 @@ public class PublicApiHandler {
     private ArrayList<String> getAreaCode() throws IOException { // 법정동코드 파일의 존재하는 모든 구,군 단위의 법정동 코드 전처리
         System.out.println("법정동 코드 전처리중...");
         ArrayList<String> codeList = new ArrayList<>(); // 법정동 코드를 담을 리스트
+        codeMap = new HashMap<>();
         File file = new File("./data/법정동코드 전체자료.txt");
         if(file.exists()){
             BufferedReader bufferedReader = new BufferedReader(new FileReader(file, StandardCharsets.UTF_8));
@@ -148,16 +149,15 @@ public class PublicApiHandler {
 
             resAptInfoArrayList.add(resAptInfo);
 
-            ArrayList<ResAptInfo> arrayList = aptInfoHashMap.get(resAptInfoArrayList.get(i).getAptName());
-            if(arrayList == null){
+            ArrayList<ResAptInfo> arrayList;
+            try{
+                arrayList = aptInfoHashMap.get(resAptInfoArrayList.get(i).getAptName());
+            }
+            catch (NullPointerException e){
                 arrayList = new ArrayList<>();
-                arrayList.add(resAptInfo);
-                aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), arrayList);
             }
-            else{
-                arrayList.add(resAptInfo);
-                aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), arrayList);
-            }
+            arrayList.add(resAptInfo);
+            aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), arrayList);
         }
         System.out.println("데이터 변환 완료!");
         return resAptInfoArrayList;

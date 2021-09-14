@@ -12,8 +12,6 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 public class ApiController {
 
-
-
     @GetMapping("/get/aptInfo")
     public List<String> getAptInfo(){
         ApplicationContext context = ApplicationContextProvider.getContext();
