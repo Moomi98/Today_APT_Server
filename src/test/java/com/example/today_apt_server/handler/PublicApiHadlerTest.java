@@ -4,7 +4,6 @@ import com.example.today_apt_server.converter.Converter;
 import com.example.today_apt_server.dto.Details;
 import com.example.today_apt_server.dto.ReqAPTInfo;
 import com.example.today_apt_server.dto.ResAptInfo;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,54 +25,59 @@ import java.util.*;
 @SpringBootTest
 public class PublicApiHadlerTest {
 
-
     private ArrayList<ReqAPTInfo> reqAPTInfoArrayList;
+    private ArrayList<ResAptInfo> resAptInfoArrayList;
+    private ArrayList<String> aptInfoJson;
     private HashMap<String, String> codeMap;
+    private HashMap<String, ArrayList<ResAptInfo>> aptInfoHashMap;
 
     @Test
-    public void getOpenApi() throws URISyntaxException, IOException {
+    public void getOpenApiTest() throws URISyntaxException, IOException {
+        System.out.println("데이터 분석 시작...");
         ObjectMapper objectMapper = new ObjectMapper();
         reqAPTInfoArrayList = new ArrayList<>();
-        ArrayList<ResAptInfo> resAPTInfoArrayList;
-        String encodedServiceKey = "AAU8XVY6qAEr%2BjeoQWSx5%2BDtoZilWGKXT8jlz00LhC%2BnD51sqLyQcMnaT06waub%2Fuy1OoEhGkIB4MXUpZ3qi9A%3D%3D";
+        String DEAL_YMD = "201907";
         String pageNo = "1";
-        String numOfRows = "10";
-        String DEAL_YMD = "201912";
+        String numOfRows = "1000";
+        String encodedServiceKey = "AAU8XVY6qAEr%2BjeoQWSx5%2BDtoZilWGKXT8jlz00LhC%2BnD51sqLyQcMnaT06waub%2Fuy1OoEhGkIB4MXUpZ3qi9A%3D%3D";
         String apiUri = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
         RestTemplate restTemplate = new RestTemplate();
-        ArrayList<String> codeList2 = getAreaCode();
 
-        ArrayList<String> codeList = new ArrayList<>();
+        codeMap = getAreaCode();
+        ArrayList<String> codeList = new ArrayList<>(); // getAreaCode() 대신 사용
         codeList.add("11110");
         codeList.add("11140");
 
         for(String code : codeList) {
             String stringUri = UriComponentsBuilder.fromUriString(apiUri)
                     .queryParam("serviceKey", encodedServiceKey)
+                    .queryParam("LAWD_CD", code)
                     .queryParam("pageNo", pageNo)
                     .queryParam("numOfRows", numOfRows)
-                    .queryParam("LAWD_CD", code)
                     .queryParam("DEAL_YMD", DEAL_YMD)
                     .build(false).toString();
             URI uri = new URI(stringUri); // URI 클래스 사용 시 한 번 encoding 작업 후 get 요청
             String result = restTemplate.getForObject(uri, String.class);
 
             String jsonObject = jsonProcessing(result);
-            JSONArray jsonArray = new JSONArray(jsonObject);
+            if(jsonObject != null){
+                JSONArray jsonArray = new JSONArray(jsonObject);
 
-            for(Object json : jsonArray){
-                ReqAPTInfo reqAPTInfo = objectMapper.readValue(json.toString(), ReqAPTInfo.class);
-                reqAPTInfo.setAddress(codeMap.get(code) + " " + reqAPTInfo.getDong());
-                reqAPTInfoArrayList.add(reqAPTInfo);
-                System.out.println(reqAPTInfo);
+                for(Object json : jsonArray){
+                    ReqAPTInfo reqAPTInfo = objectMapper.readValue(json.toString(), ReqAPTInfo.class);
+                    reqAPTInfo.setAddress(codeMap.get(code) + " " + reqAPTInfo.getDong());
+                    reqAPTInfoArrayList.add(reqAPTInfo);
+                }
             }
         }
 
         sortByRank();
-        resAPTInfoArrayList = reqInfoToResInfo();
-        ArrayList<String> json = Converter.convertToJson(resAPTInfoArrayList);
+        resAptInfoArrayList = reqInfoToResInfo();
+        aptInfoJson = Converter.convertToJson(resAptInfoArrayList.subList(0, 20));
+        System.out.println(aptInfoJson);
+        SearchHandlerTest searchHandlerTest = setSearchHandler();
+        searchHandlerTest.searchTest("자이");
 
-        System.out.println(json);
     }
 
     private String jsonProcessing(String json) throws JSONException { // 다중 json에서 item들만 골라내는 함수
@@ -90,8 +94,7 @@ public class PublicApiHadlerTest {
         return null;
     }
 
-    private ArrayList<String> getAreaCode() throws IOException { // 법정동코드 파일의 존재하는 모든 구,군 단위의 법정동 코드 전처리
-        ArrayList<String> codeList = new ArrayList<>(); // 법정동 코드를 담을 리스트
+    private HashMap<String,String> getAreaCode() throws IOException { // 법정동코드 파일의 존재하는 모든 구,군 단위의 법정동 코드 전처리
         codeMap = new HashMap<>();
         File file = new File("./data/법정동코드 전체자료.txt");
         if(file.exists()){
@@ -100,7 +103,6 @@ public class PublicApiHadlerTest {
             while((str = bufferedReader.readLine()) != null){
                 var text = str.split("\\s");
                 if(text[text.length - 1].equals("존재") && text.length == 4){
-                    codeList.add(text[0].substring(0, 5));
                     codeMap.put(text[0].substring(0, 5), text[1] + " " + text[2]);
                 }
             }
@@ -108,13 +110,12 @@ public class PublicApiHadlerTest {
         else
             System.out.println("파일이 없습니다.");
 
-        return codeList;
+        return codeMap;
     }
 
     private void sortByRank(){ // 가격을 기준으로 순위를 정렬하는 함수
         for(ReqAPTInfo reqAPTInfo : reqAPTInfoArrayList){
             String price = Converter.deleteComma(reqAPTInfo.getPrice().replaceAll(" ", ""));
-            System.out.println(price);
             int intPrice = Integer.parseInt(price);
             reqAPTInfo.setIntPrice(intPrice);
         }
@@ -123,12 +124,14 @@ public class PublicApiHadlerTest {
 
     private ArrayList<ResAptInfo> reqInfoToResInfo(){ // 공공데이터 api 로부터 받은 데이터를 웹 페이지에 전달할 데이터로 변환
         ArrayList<ResAptInfo> resAptInfoArrayList = new ArrayList<>();
+        aptInfoHashMap = new HashMap<>();
+
         for(int i = 0; i < reqAPTInfoArrayList.size(); i++){
             ResAptInfo resAptInfo = new ResAptInfo();
             Details details = new Details();
 
             resAptInfo.setAptName(reqAPTInfoArrayList.get(i).getAptName());
-            resAptInfo.setPrice(reqAPTInfoArrayList.get(i).getPrice().replaceAll(" ", ""));
+            resAptInfo.setPrice(Converter.addCommaToPrice(reqAPTInfoArrayList.get(i).getPrice().replaceAll(" ", "")));
             resAptInfo.setRank(i + 1);
             details.setArea(reqAPTInfoArrayList.get(i).getArea());
             details.setAddress(reqAPTInfoArrayList.get(i).getAddress());
@@ -140,13 +143,27 @@ public class PublicApiHadlerTest {
             resAptInfo.setDetails(details);
 
             resAptInfoArrayList.add(resAptInfo);
+
+            ArrayList<ResAptInfo> hashMapList;
+            try{
+                hashMapList = aptInfoHashMap.get(resAptInfoArrayList.get(i).getAptName());
+                hashMapList.add(resAptInfo);
+                aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), hashMapList);
+            }
+            catch (NullPointerException e){
+                hashMapList = new ArrayList<>();
+                hashMapList.add(resAptInfo);
+                aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), hashMapList);
+            }
         }
+
         return resAptInfoArrayList;
     }
 
-    @Test
-    public void converterTest(){
-        String result = Converter.addCommaToPrice("2690000000");
-        System.out.println(result);
+    private SearchHandlerTest setSearchHandler(){
+        SearchHandlerTest searchHandlerTest = new SearchHandlerTest();
+        searchHandlerTest.setResAptInfoArrayList(resAptInfoArrayList);
+        return searchHandlerTest;
     }
+
 }

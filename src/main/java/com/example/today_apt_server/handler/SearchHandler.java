@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.context.ApplicationContext;
 
 import javax.print.attribute.HashPrintJobAttributeSet;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -16,7 +17,17 @@ import java.util.HashMap;
 @AllArgsConstructor
 public class SearchHandler {
 
-    private HashMap<String, ArrayList<ResAptInfo>> aptInfoHashMap;
+    private ArrayList<ResAptInfo> resAptInfoArrayList;
 
-    public void searchApt(String aptName){}
+    public ArrayList<ResAptInfo> searchApt(String aptName){
+
+        ArrayList<ResAptInfo> result = new ArrayList<>();
+
+        for(ResAptInfo resAptInfo : resAptInfoArrayList){
+            if(resAptInfo.getAptName().contains(aptName))
+                result.add(resAptInfo);
+        }
+
+        return result;
+    }
 }

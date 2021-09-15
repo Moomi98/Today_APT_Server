@@ -1,6 +1,5 @@
 package com.example.today_apt_server.converter;
 
-import com.example.today_apt_server.dto.APT;
 import com.example.today_apt_server.dto.ResAptInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +19,6 @@ public class Converter {
             jsonList.add(info);
         }
 
-        System.out.println(jsonList);
         return jsonList;
     }
 

@@ -44,8 +44,8 @@ public class PublicApiHandler {
         ObjectMapper objectMapper = new ObjectMapper();
         reqAPTInfoArrayList = new ArrayList<>();
         String encodedServiceKey = "AAU8XVY6qAEr%2BjeoQWSx5%2BDtoZilWGKXT8jlz00LhC%2BnD51sqLyQcMnaT06waub%2Fuy1OoEhGkIB4MXUpZ3qi9A%3D%3D";
-        String pageNo = "1";
-        String numOfRows = "10";
+        // String pageNo = "1";
+        // String numOfRows = "10";
         String apiUri = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
         RestTemplate restTemplate = new RestTemplate();
 
@@ -54,8 +54,6 @@ public class PublicApiHandler {
         for(String code : codeList) {
             String stringUri = UriComponentsBuilder.fromUriString(apiUri)
                     .queryParam("serviceKey", encodedServiceKey)
-                    .queryParam("pageNo", pageNo)
-                    .queryParam("numOfRows", numOfRows)
                     .queryParam("LAWD_CD", code)
                     .queryParam("DEAL_YMD", DEAL_YMD)
                     .build(false).toString();
@@ -77,6 +75,7 @@ public class PublicApiHandler {
         sortByRank();
         resAptInfoArrayList = reqInfoToResInfo();
         aptInfoJson = Converter.convertToJson(resAptInfoArrayList.subList(0, 50));
+        setSearchHandler();
     }
 
     private String jsonProcessing(String json) throws JSONException { // 다중 json에서 item들만 골라내는 함수
@@ -131,6 +130,7 @@ public class PublicApiHandler {
     private ArrayList<ResAptInfo> reqInfoToResInfo(){ // 공공데이터 api 로부터 받은 데이터를 웹 페이지에 전달할 데이터로 변환
         System.out.println("데이터 변환 중...");
         ArrayList<ResAptInfo> resAptInfoArrayList = new ArrayList<>();
+        aptInfoHashMap = new HashMap<>();
         for(int i = 0; i < reqAPTInfoArrayList.size(); i++){
             ResAptInfo resAptInfo = new ResAptInfo();
             Details details = new Details();
@@ -149,15 +149,17 @@ public class PublicApiHandler {
 
             resAptInfoArrayList.add(resAptInfo);
 
-            ArrayList<ResAptInfo> arrayList;
+            ArrayList<ResAptInfo> hashMapList;
             try{
-                arrayList = aptInfoHashMap.get(resAptInfoArrayList.get(i).getAptName());
+                hashMapList = aptInfoHashMap.get(resAptInfoArrayList.get(i).getAptName());
+                hashMapList.add(resAptInfo);
+                aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), hashMapList);
             }
             catch (NullPointerException e){
-                arrayList = new ArrayList<>();
+                hashMapList = new ArrayList<>();
+                hashMapList.add(resAptInfo);
+                aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), hashMapList);
             }
-            arrayList.add(resAptInfo);
-            aptInfoHashMap.put(reqAPTInfoArrayList.get(i).getAptName(), arrayList);
         }
         System.out.println("데이터 변환 완료!");
         return resAptInfoArrayList;
