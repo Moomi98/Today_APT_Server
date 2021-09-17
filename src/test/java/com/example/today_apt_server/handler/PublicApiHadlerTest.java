@@ -131,7 +131,9 @@ public class PublicApiHadlerTest {
             Details details = new Details();
 
             resAptInfo.setAptName(reqAPTInfoArrayList.get(i).getAptName());
-            resAptInfo.setPrice(Converter.addCommaToPrice(reqAPTInfoArrayList.get(i).getPrice().replaceAll(" ", "")));
+            String price = Converter.deleteComma(reqAPTInfoArrayList.get(i).getPrice().replaceAll(" ", ""));
+            System.out.print(price + "/");
+            resAptInfo.setPrice(Converter.addCommaToPrice(price));
             resAptInfo.setRank(i + 1);
             details.setArea(reqAPTInfoArrayList.get(i).getArea());
             details.setAddress(reqAPTInfoArrayList.get(i).getAddress());
@@ -141,6 +143,8 @@ public class PublicApiHadlerTest {
             details.setDay(reqAPTInfoArrayList.get(i).getDay());
             details.setFloor(reqAPTInfoArrayList.get(i).getFloor());
             resAptInfo.setDetails(details);
+
+            System.out.println(resAptInfo.getPrice());
 
             resAptInfoArrayList.add(resAptInfo);
 

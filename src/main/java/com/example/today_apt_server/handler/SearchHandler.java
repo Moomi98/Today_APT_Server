@@ -1,20 +1,17 @@
 package com.example.today_apt_server.handler;
 
-import com.example.today_apt_server.ApplicationContextProvider;
 import com.example.today_apt_server.dto.ResAptInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
-import javax.print.attribute.HashPrintJobAttributeSet;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Component
 public class SearchHandler {
 
     private ArrayList<ResAptInfo> resAptInfoArrayList;

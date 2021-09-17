@@ -24,10 +24,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Component
 @Data
@@ -48,10 +45,12 @@ public class PublicApiHandler {
         // String numOfRows = "10";
         String apiUri = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
         RestTemplate restTemplate = new RestTemplate();
-
         ArrayList<String> codeList = getAreaCode();
 
+        int reqCount = 0;
         for(String code : codeList) {
+            reqCount += 1;
+            System.out.println("reqCount : " + reqCount);
             String stringUri = UriComponentsBuilder.fromUriString(apiUri)
                     .queryParam("serviceKey", encodedServiceKey)
                     .queryParam("LAWD_CD", code)
@@ -61,7 +60,7 @@ public class PublicApiHandler {
             String result = restTemplate.getForObject(uri, String.class);
 
             String jsonObject = jsonProcessing(result);
-            if(jsonObject != null){
+            if(!Objects.equals(jsonObject, "")){
                 JSONArray jsonArray = new JSONArray(jsonObject);
 
                 for(Object json : jsonArray){
@@ -89,7 +88,7 @@ public class PublicApiHandler {
             return jsonObject3.get("item").toString();
         }
 
-        return null;
+        return "";
     }
 
     private ArrayList<String> getAreaCode() throws IOException { // 법정동코드 파일의 존재하는 모든 구,군 단위의 법정동 코드 전처리
@@ -136,7 +135,7 @@ public class PublicApiHandler {
             Details details = new Details();
 
             resAptInfo.setAptName(reqAPTInfoArrayList.get(i).getAptName());
-            resAptInfo.setPrice(Converter.addCommaToPrice(reqAPTInfoArrayList.get(i).getPrice().replaceAll(" ", "")));
+            resAptInfo.setPrice(Converter.addCommaToPrice(Converter.deleteComma(reqAPTInfoArrayList.get(i).getPrice().replaceAll(" ", ""))));
             resAptInfo.setRank(i + 1);
             details.setArea(reqAPTInfoArrayList.get(i).getArea());
             details.setAddress(reqAPTInfoArrayList.get(i).getAddress());
@@ -168,6 +167,6 @@ public class PublicApiHandler {
     private void setSearchHandler(){
         ApplicationContext context = ApplicationContextProvider.getContext();
         SearchHandler searchHandler = context.getBean(SearchHandler.class);
-        searchHandler.setAptInfoHashMap(aptInfoHashMap);
+        searchHandler.setResAptInfoArrayList(resAptInfoArrayList);
     }
 }
